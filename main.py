@@ -24,17 +24,19 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- NEW STUFF: ADD SCREENSHOT UPLOADER ---
-# This creates a file upload area for screenshots or images
-uploaded_file = st.file_uploader("Upload a screenshot or image (PNG, JPG)", type=["png", "jpg", "jpeg"])
-
-if uploaded_file is not None:
-    # This displays the image on your website so the user can see it!
-    st.image(uploaded_file, caption="Uploaded Screenshot", use_container_width=True)
+# --- UPDATED: COMPACT SIDEBAR UPLOADER ---
+# Moving the uploader into st.sidebar makes it much smaller and puts it on the left!
+with st.sidebar:
+    st.header("Attachments")
+    uploaded_file = st.file_uploader("Upload a screenshot (PNG, JPG)", type=["png", "jpg", "jpeg"])
+    
+    if uploaded_file is not None:
+        st.image(uploaded_file, caption="Uploaded Screenshot", use_container_width=True)
 # ------------------------------------------
 
 # 4. Handle Input & AI Generation
-if user_input := st.chat_input("Ask me anything..."):
+# Change the text inside st.chat_input to whatever question or phrase you want!
+if user_input := st.chat_input("Ask StrikeAI a question..."):
     with st.chat_message("user"):
         st.markdown(user_input)
     st.session_state.messages.append({"role": "user", "content": user_input})
