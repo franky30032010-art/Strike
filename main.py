@@ -4,32 +4,87 @@ from groq import Groq
 # 1. Title your public webpage and force wide mode
 st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# Custom CSS to force the uploader to lock to the bottom right above the input bar
+# Custom CSS to design a unified layout bar at the bottom of the screen
 st.markdown(
     """
     <style>
     .stMainBlockContainer {
-        max-width: 700px !important;
+        max-width: 800px !important;
         margin: 0 auto !important;
-        padding-bottom: 220px !important; /* Extra padding so chat text clears the bottom layout */
+        padding-bottom: 160px !important; /* Leaves room so text doesn't hide behind the footer bar */
     }
     
-    /* Target the file uploader and glue it directly to the sticky bottom of the webpage */
-    div[data-testid="stFileUploader"] {
+    /* Completely hide Streamlit's default bulky uploader labels */
+    div[data-testid="stFileUploader"] label, div[data-testid="stFileUploader"] dropzone {
+        display: none !important;
+    }
+    div[data-testid="stFileUploader"] section {
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+    }
+    div[data-testid="stFileUploader"] [data-testid="stWidgetLabel"] {
+        display: none !important;
+    }
+    
+    /* Style the file uploader button to look like a small plus sign */
+    div[data-testid="stFileUploader"] button {
+        background-color: #e4e6eb !important;
+        color: #333 !important;
+        border-radius: 50% !important;
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 20px !important;
+        font-weight: bold !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: none !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    div[data-testid="stFileUploader"] button:hover {
+        background-color: #d8dadf !important;
+    }
+    
+    /* Make the text entry field look sharp and remove margins */
+    div[data-testid="stTextInput"] {
+        margin: 0 !important;
+    }
+    div[data-testid="stTextInput"] input {
+        border-radius: 20px !important;
+        padding: 10px 20px !important;
+        border: 1px solid #d8dadf !important;
+    }
+    
+    /* Style the main send button */
+    div[data-testid="stFormSubmitButton"] button {
+        border-radius: 20px !important;
+        background-color: #007bff !important;
+        color: white !important;
+        border: none !important;
+        padding: 8px 20px !important;
+        font-weight: bold !important;
+    }
+    div[data-testid="stFormSubmitButton"] button:hover {
+        background-color: #0056b3 !important;
+    }
+    
+    /* Sticky footer bar container that pins everything to the bottom on ONE line */
+    .sticky-footer-bar {
         position: fixed !important;
-        bottom: 110px !important; /* Floats perfectly above the 60px stChatInput bar */
+        bottom: 30px !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
-        max-width: 650px !important;
+        max-width: 700px !important;
         width: 100% !important;
-        z-index: 99999 !important;
         background-color: white !important;
-        padding: 5px 0 !important;
-    }
-    
-    /* Shrink the box to make it sleek and small */
-    div[data-testid="stFileUploader"] section {
-        padding: 10px !important;
+        z-index: 99999 !important;
+        padding: 10px 20px !important;
+        border-radius: 30px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        border: 1px solid #e4e6eb !important;
     }
     </style>
     """,
@@ -58,21 +113,39 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- UPDATED: RE-POSITIONED COMPACT BOTTOM UPLOADER ---
-# label_visibility="collapsed" hides the bulky instruction text to save space
-uploaded_file = st.file_uploader("+ Add screenshot or file:", type=["png", "jpg", "jpeg"], label_visibility="visible")
+# --- NEW: COMBINED SINGLE-ROW INPUT CONTAINER ---
+# This forces the layout widgets to load inside a sticky single row container block
+st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
 
+with st.form(key="chat_layout_form", clear_on_submit=True):
+    # Set up three aligned layout blocks right next to each other
+    row_col1, row_col2, row_col3 = st.columns([1, 10, 2], vertical_alignment="center")
+    
+    with row_col1:
+        # The file uploader is styled to act as the circular plus symbol
+        uploaded_file = st.file_uploader("+", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
+        
+    with row_col2:
+        # The clean text typing bar
+        user_text = st.text_input("Message", placeholder="Ask StrikeAI a question...", label_visibility="collapsed")
+        
+    with row_col3:
+        # The action submission switch
+        submit_button = st.form_submit_button("Send")
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# If an asset file is uploaded, show its preview box inside the conversation zone
 if uploaded_file is not None:
     st.image(uploaded_file, caption="Attached File Preview", width=200)
 # -------------------------------------------------------------
 
 # 4. Handle Input & AI Generation
-if user_input := st.chat_input("Ask StrikeAI a question..."):
+if submit_button and user_text:
     with st.chat_message("user"):
-        st.markdown(user_input)
-    st.session_state.messages.append({"role": "user", "content": user_input})
+        st.markdown(user_text)
+    st.session_state.messages.append({"role": "user", "content": user_text})
     
-    # Send conversation history to the cloud model
     with st.chat_message("assistant"):
         persona = (
             "You are StrikeAI, a highly authentic, chill, and slightly witty gaming buddy "
@@ -85,7 +158,6 @@ if user_input := st.chat_input("Ask StrikeAI a question..."):
         )
         
         groq_messages = [{"role": "system", "content": persona}]
-        
         for m in st.session_state.messages:
             groq_messages.append({"role": m["role"], "content": m["content"]})
             
