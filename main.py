@@ -1,69 +1,77 @@
 import streamlit as st
 from groq import Groq
 
-# 1. Title your public webpage
-st.set_page_config(page_title="My Custom AI", page_icon="🤖")
-st.title("Welcome to StrikeAI!")
-st.write("This standalone AI chatbot is running completely in the cloud.")
+# 1. Title your public webpage and force wide mode
+st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# --- NEW: ADVANCED INTEGRATED PLUS BUTTON STYLING ---
-# This code injects a functional plus button directly into the native chat input bar!
+# --- FIXED CSS: THIS SNAPS THE PLUS SIGN INSIDE THE BOTTOM INPUT BAR ---
 st.markdown(
     """
     <style>
-    /* Make room for the message space centering */
+    /* Center your main page content nicely */
     .stMainBlockContainer {
         max-width: 800px !important;
         margin: 0 auto !important;
+        padding-bottom: 120px !important; /* Make room so messages don't hide behind the input bar */
     }
-    /* Restyle the main chat input bar wrapper to fit our plus button */
+    
+    /* Find the container holding the chat input box and position it relatively */
     div[data-testid="stChatInput"] {
-        max-width: 600px !important;
+        max-width: 650px !important;
         margin: 0 auto !important;
         position: relative !important;
     }
+    
+    /* Push the typing text inside the chat box over to the right to leave space for the + sign */
     div[data-testid="stChatInput"] textarea {
-        padding-left: 45px !important; /* Push placeholder text to the right for the + sign */
+        padding-left: 50px !important; 
     }
-    /* Style our custom overlay plus button */
+    
+    /* Target our custom plus button and force it down inside the left edge of the input box */
+    .chat-plus-container {
+        position: fixed;
+        bottom: 52px; /* Moves it exactly down to line up with the typing bar */
+        left: calc(50% - 310px); /* Centers it and aligns it to the left edge of the 650px chat box */
+        z-index: 999999; /* Forces it to sit on top of everything else */
+    }
+    
     .chat-plus-btn {
-        position: absolute;
-        left: 15px;
-        bottom: 12px;
-        z-index: 1000;
-        background: none;
+        background: #f0f2f6;
         border: none;
-        font-size: 24px;
+        font-size: 22px;
         color: #555;
         cursor: pointer;
-        font-weight: 300;
+        font-weight: bold;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%; /* Makes the plus button a neat little circle */
+        display: flex;
+        align-items: center;
+        justify-content: center;
         line-height: 1;
-        transition: transform 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: background 0.2s ease, transform 0.2s ease;
     }
+    
     .chat-plus-btn:hover {
-        transform: scale(1.15);
+        background: #e4e6eb;
+        transform: scale(1.05);
         color: #000;
     }
     </style>
-    
-    <script>
-    // Simple script to handle clicking our custom inline plus button
-    function triggerHiddenUpload() {
-        const uploader = window.parent.document.querySelector('input[type="file"]');
-        if (uploader) {
-            uploader.click();
-        } else {
-            alert("Open the sidebar on the left to manage files!");
-        }
-    }
-    </script>
     """,
     unsafe_allow_html=True
 )
 
-# Render the interactive inline plus sign anchor visually
-st.markdown('<button class="chat-plus-btn" onclick="triggerHiddenUpload()">+</button>', unsafe_allow_html=True)
-# -----------------------------------------------------
+# Render the plus button inside its fixed container wrapper
+st.markdown(
+    '<div class="chat-plus-container"><button class="chat-plus-btn" onclick="alert(\'Photo and file attachment options opened!\')">+</button></div>', 
+    unsafe_allow_html=True
+)
+# -----------------------------------------------------------------------
+
+st.title("Welcome to StrikeAI!")
+st.write("This standalone AI chatbot is running completely in the cloud.")
 
 # 2. Grab the hidden API key from host settings
 if "GROQ_API_KEY" in st.secrets:
@@ -83,13 +91,6 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
-
-# --- KEEPING AN OPTIONAL SIDEBAR FOR VISUAL ATTACHMENTS ---
-with st.sidebar:
-    st.header("Attachments")
-    uploaded_file = st.file_uploader("Upload a screenshot (PNG, JPG)", type=["png", "jpg", "jpeg"])
-    if uploaded_file is not None:
-        st.image(uploaded_file, caption="Uploaded Screenshot", use_container_width=True)
 
 # 4. Handle Input & AI Generation (Using native clean input bar!)
 if user_input := st.chat_input("Ask StrikeAI a question..."):
