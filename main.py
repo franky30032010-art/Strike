@@ -32,7 +32,6 @@ if user_input := st.chat_input("Ask me anything..."):
     
     # Send conversation history to the cloud model
     with st.chat_message("assistant"):
-        # We split the long description across lines safely so it doesn't break alignment
         persona = (
             "You are StrikeAI, a highly authentic, chill, and slightly witty gaming buddy "
             "created by Franky. Talk like a real teenager or streamer on Discord or Twitch. "
@@ -52,6 +51,7 @@ if user_input := st.chat_input("Ask me anything..."):
             model="llama-3.3-70b-versatile",
             messages=groq_messages
         )
-response_text = completion.choices[0].message.content
+        response_text = completion.choices[0].message.content
         st.markdown(response_text)
+        
     st.session_state.messages.append({"role": "assistant", "content": response_text})
