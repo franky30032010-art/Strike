@@ -11,41 +11,34 @@ st.markdown(
     .stMainBlockContainer {
         max-width: 800px !important;
         margin: 0 auto !important;
-        padding-bottom: 160px !important; /* Leaves room so text doesn't hide behind the footer bar */
+        padding-bottom: 160px !important; 
     }
     
-    /* Completely hide Streamlit's default bulky uploader labels */
-    div[data-testid="stFileUploader"] label, div[data-testid="stFileUploader"] dropzone {
+    /* COMPLETELY HIDE THE BULKY DEFAULT STREAMLIT UPLOADER WIDGET */
+    .hidden-uploader {
         display: none !important;
     }
-    div[data-testid="stFileUploader"] section {
-        padding: 0 !important;
-        border: none !important;
+    
+    /* STYLE OUR BRAND NEW CLEAN CUSTOM PLUS BUTTON */
+    .clean-plus-btn {
         background: transparent !important;
-    }
-    div[data-testid="stFileUploader"] [data-testid="stWidgetLabel"] {
-        display: none !important;
-    }
-    
-    /* Style the file uploader button to look like a small plus sign */
-    div[data-testid="stFileUploader"] button {
-        background-color: #e4e6eb !important;
-        color: #333 !important;
-        border-radius: 50% !important;
-        width: 40px !important;
-        height: 40px !important;
-        font-size: 20px !important;
-        font-weight: bold !important;
+        border: none !important;
+        font-size: 28px !important;
+        font-weight: 300 !important;
+        color: #555 !important;
+        cursor: pointer !important;
+        width: 36px !important;
+        height: 36px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        border: none !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
-        margin: 0 !important;
+        transition: transform 0.2s ease, color 0.2s ease;
         padding: 0 !important;
+        margin-right: 5px !important;
     }
-    div[data-testid="stFileUploader"] button:hover {
-        background-color: #d8dadf !important;
+    .clean-plus-btn:hover {
+        transform: scale(1.15);
+        color: #000 !important;
     }
     
     /* Make the text entry field look sharp and remove margins */
@@ -87,6 +80,16 @@ st.markdown(
         border: 1px solid #e4e6eb !important;
     }
     </style>
+    
+    <script>
+    // JavaScript helper script that safely tells your browser to trigger the file manager when clicking our +
+    function clickActualUploader() {
+        const fileInput = window.parent.document.querySelector('div.hidden-uploader input[type="file"]');
+        if (fileInput) {
+            fileInput.click();
+        }
+    }
+    </script>
     """,
     unsafe_allow_html=True
 )
@@ -113,24 +116,25 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- NEW: COMBINED SINGLE-ROW INPUT CONTAINER ---
-# This forces the layout widgets to load inside a sticky single row container block
+# --- NEW: COMBINED SINGLE-ROW INPUT CONTAINER WITH CLEAN BUTTON ---
 st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
 
 with st.form(key="chat_layout_form", clear_on_submit=True):
-    # Set up three aligned layout blocks right next to each other
-    row_col1, row_col2, row_col3 = st.columns([1, 10, 2], vertical_alignment="center")
+    row_col1, row_col2, row_col3 = st.columns(, vertical_alignment="center")
     
     with row_col1:
-        # The file uploader is styled to act as the circular plus symbol
-        uploaded_file = st.file_uploader("+", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
+        # Render a clean, unshaded HTML plus sign button that executes our JavaScript link on click
+        st.markdown('<button type="button" class="clean-plus-btn" onclick="clickActualUploader()">+</button>', unsafe_allow_html=True)
+        
+        # Keep the functional uploader running silently hidden in the background frame
+        st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("Hidden", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
         
     with row_col2:
-        # The clean text typing bar
         user_text = st.text_input("Message", placeholder="Ask StrikeAI a question...", label_visibility="collapsed")
         
     with row_col3:
-        # The action submission switch
         submit_button = st.form_submit_button("Send")
 
 st.markdown('</div>', unsafe_allow_html=True)
