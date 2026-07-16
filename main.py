@@ -41,7 +41,7 @@ if user_input := st.chat_input("Ask me anything..."):
             model="llama-3.3-70b-versatile", # Incredibly powerful, ultra-fast free model
             messages=groq_messages
         )
-        response_text = completion.choices.message.content
+response_text = completion.choices[0].message.content
         st.markdown(response_text)
         
     st.session_state.messages.append({"role": "assistant", "content": response_text})
