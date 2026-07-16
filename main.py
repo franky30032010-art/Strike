@@ -4,76 +4,23 @@ from groq import Groq
 # 1. Title your public webpage and force wide mode
 st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# --- FIXED FLEXBOX STYLE: ANCHORS THE PLUS SIGN INSIDE THE CHAT INPUT FOR REAL ---
+# Custom CSS to center the chat window content nicely
 st.markdown(
     """
     <style>
-    /* Center your main page content nicely */
     .stMainBlockContainer {
-        max-width: 800px !important;
+        max-width: 700px !important;
         margin: 0 auto !important;
-        padding-bottom: 140px !important;
+        padding-bottom: 150px !important;
     }
-    
-    /* Target the actual structural container that surrounds the rounded chat box */
-    div[data-testid="stChatInput"] {
-        max-width: 650px !important;
-        margin: 0 auto !important;
-        position: relative !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-    
-    /* Push the typing text inside the chat box over to the right to leave space for the + sign */
-    div[data-testid="stChatInput"] textarea {
-        padding-left: 55px !important; 
-    }
-    
-    /* Target our custom plus container and insert it neatly inline on top of the text area */
-    .chat-plus-container {
-        position: absolute !important;
-        left: 14px !important;
-        /* Center it vertically exactly inside the bar */
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        z-index: 999999 !important;
-        display: block !important;
-    }
-    
-    .chat-plus-btn {
-        background: #e4e6eb !important;
-        border: none !important;
-        font-size: 20px !important;
-        color: #333 !important;
-        cursor: pointer !important;
-        font-weight: bold !important;
-        width: 28px !important;
-        height: 28px !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        line-height: 1 !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
-        pointer-events: auto !important; /* Forces the browser to allow clicks */
-    }
-    
-    .chat-plus-btn:hover {
-        background: #d8dadf !important;
-        transform: scale(1.05);
-        color: #000 !important;
+    /* Style the file uploader area to be compact right above the input bar */
+    div[data-testid="stFileUploader"] {
+        margin-bottom: -10px !important;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
-
-# Render the plus button inside its self-centering flex wrapper
-st.markdown(
-    '<div class="chat-plus-container"><button class="chat-plus-btn" onclick="alert(\'Photo and file attachment options opened!\')">+</button></div>', 
-    unsafe_allow_html=True
-)
-# --------------------------------------------------------------------------------
 
 st.title("Welcome to StrikeAI!")
 st.write("This standalone AI chatbot is running completely in the cloud.")
@@ -96,6 +43,14 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
+
+# --- NEW: COMPACT ATTACHMENT AREA RIGHT ABOVE THE INPUT BAR ---
+# This forces the upload button to sit nicely right on top of your typing area!
+uploaded_file = st.file_uploader("📎 Add photos or files to your message:", type=["png", "jpg", "jpeg"])
+
+if uploaded_file is not None:
+    st.image(uploaded_file, caption="Attached File Preview", width=250)
+# -------------------------------------------------------------
 
 # 4. Handle Input & AI Generation
 if user_input := st.chat_input("Ask StrikeAI a question..."):
@@ -128,3 +83,4 @@ if user_input := st.chat_input("Ask StrikeAI a question..."):
         st.markdown(response_text)
         
     st.session_state.messages.append({"role": "assistant", "content": response_text})
+    st.rerun()
