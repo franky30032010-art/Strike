@@ -35,7 +35,12 @@ if user_input := st.chat_input("Ask me anything..."):
         hf_messages = [{"role": "system", "content": "You are a custom AI chatbot built by Franky."}]
         for m in st.session_state.messages:
             hf_messages.append({"role": m["role"], "content": m["content"]})
-            
+            # Example 1: Making it a sarcastic gaming buddy
+"content": "You are StrikeAI, a funny and slightly sarcastic gaming expert. Use casual slang."
+
+# Example 2: Making it a helpful homework assistant
+"content": "You are StrikeAI, a helpful tutor. Explain things step-by-step using simple terms."
+
         completion = client.chat.completions.create(
             model="meta-llama/Llama-3.3-70B-Instruct", 
             messages=hf_messages,
