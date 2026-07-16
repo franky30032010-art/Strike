@@ -18,7 +18,7 @@ st.markdown(
     }
     </style>
     """,
-    unsafe_allow_index=True
+    unsafe_allow_html=True
 )
 
 st.title("Welcome to StrikeAI!")
@@ -56,7 +56,7 @@ with st.form(key="chat_form", clear_on_submit=True):
         uploaded_file = st.file_uploader("Upload", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
         
     with col3:
-        submit_button = st.form_submit_with_button("Send")
+        submit_button = st.form_submit_button("Send")
 
 # Display the uploaded file if present
 if uploaded_file is not None:
