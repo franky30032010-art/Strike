@@ -24,6 +24,15 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
+# --- NEW STUFF: ADD SCREENSHOT UPLOADER ---
+# This creates a file upload area for screenshots or images
+uploaded_file = st.file_uploader("Upload a screenshot or image (PNG, JPG)", type=["png", "jpg", "jpeg"])
+
+if uploaded_file is not None:
+    # This displays the image on your website so the user can see it!
+    st.image(uploaded_file, caption="Uploaded Screenshot", use_container_width=True)
+# ------------------------------------------
+
 # 4. Handle Input & AI Generation
 if user_input := st.chat_input("Ask me anything..."):
     with st.chat_message("user"):
@@ -51,7 +60,7 @@ if user_input := st.chat_input("Ask me anything..."):
             model="llama-3.3-70b-versatile",
             messages=groq_messages
         )
-        response_text = completion.choices[0].message.content
+        response_text = completion.choices.message.content
         st.markdown(response_text)
         
     st.session_state.messages.append({"role": "assistant", "content": response_text})
