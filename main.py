@@ -4,18 +4,32 @@ from groq import Groq
 # 1. Title your public webpage and force wide mode
 st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# Custom CSS to center the chat window content nicely
+# Custom CSS to force the uploader to lock to the bottom right above the input bar
 st.markdown(
     """
     <style>
     .stMainBlockContainer {
         max-width: 700px !important;
         margin: 0 auto !important;
-        padding-bottom: 150px !important;
+        padding-bottom: 220px !important; /* Extra padding so chat text clears the bottom layout */
     }
-    /* Style the file uploader area to be compact right above the input bar */
+    
+    /* Target the file uploader and glue it directly to the sticky bottom of the webpage */
     div[data-testid="stFileUploader"] {
-        margin-bottom: -10px !important;
+        position: fixed !important;
+        bottom: 110px !important; /* Floats perfectly above the 60px stChatInput bar */
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        max-width: 650px !important;
+        width: 100% !important;
+        z-index: 99999 !important;
+        background-color: white !important;
+        padding: 5px 0 !important;
+    }
+    
+    /* Shrink the box to make it sleek and small */
+    div[data-testid="stFileUploader"] section {
+        padding: 10px !important;
     }
     </style>
     """,
@@ -44,12 +58,12 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- NEW: COMPACT ATTACHMENT AREA RIGHT ABOVE THE INPUT BAR ---
-# This forces the upload button to sit nicely right on top of your typing area!
-uploaded_file = st.file_uploader("📎 Add photos or files to your message:", type=["png", "jpg", "jpeg"])
+# --- UPDATED: RE-POSITIONED COMPACT BOTTOM UPLOADER ---
+# label_visibility="collapsed" hides the bulky instruction text to save space
+uploaded_file = st.file_uploader("+ Add screenshot or file:", type=["png", "jpg", "jpeg"], label_visibility="visible")
 
 if uploaded_file is not None:
-    st.image(uploaded_file, caption="Attached File Preview", width=250)
+    st.image(uploaded_file, caption="Attached File Preview", width=200)
 # -------------------------------------------------------------
 
 # 4. Handle Input & AI Generation
