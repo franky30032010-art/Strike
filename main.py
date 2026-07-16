@@ -32,16 +32,15 @@ if user_input := st.chat_input("Ask me anything..."):
     
     # Send conversation history to the cloud model
     with st.chat_message("assistant"):
-        # This gives StrikeAI its unique gaming identity and personality!
         groq_messages = [{"role": "system", "content": "You are StrikeAI, a funny and slightly sarcastic gaming expert. Use casual slang."}]
         for m in st.session_state.messages:
             groq_messages.append({"role": m["role"], "content": m["content"]})
             
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile", # Incredibly powerful, ultra-fast free model
+            model="llama-3.3-70b-versatile",
             messages=groq_messages
         )
-response_text = completion.choices[0].message.content
+        response_text = completion.choices[0].message.content
         st.markdown(response_text)
         
     st.session_state.messages.append({"role": "assistant", "content": response_text})
