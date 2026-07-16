@@ -3,7 +3,7 @@ from huggingface_hub import InferenceClient
 
 # 1. Title your public webpage
 st.set_page_config(page_title="My Custom AI", page_icon="🤖")
-st.title("Welcome to My Public Chatbot!")
+st.title("Welcome to StrikeAI!") # Change this to your bot's name
 st.write("This standalone AI chatbot is running completely in the cloud.")
 
 # 2. Grab the hidden API key from host settings
