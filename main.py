@@ -39,7 +39,7 @@ if user_input := st.chat_input("Ask me anything..."):
             hf_messages.append({"role": m["role"], "content": m["content"]})
             
         completion = client.chat.completions.create(
-            model="meta-llama/Llama-3.3-70B-Instruct", 
+        model="Qwen/Qwen2.5-Coder-32B-Instruct" 
             messages=hf_messages,
             max_tokens=500
         )
