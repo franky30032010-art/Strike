@@ -39,7 +39,7 @@ with main_col2:
 
     # 4. Handle Input & AI Generation
     # Customise the text inside the quotes below to whatever you want your text bar to say!
-    if user_input := st.chat_input("Type here..."):
+    if user_input := st.chat_input("Ask StrikeAI a question..."):
         with st.chat_message("user"):
             st.markdown(user_input)
         st.session_state.messages.append({"role": "user", "content": user_input})
