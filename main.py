@@ -4,7 +4,7 @@ from groq import Groq
 # 1. Title your public webpage and force wide mode
 st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# --- FIXED CSS: THIS SNAPS THE PLUS SIGN INSIDE THE BOTTOM INPUT BAR ---
+# --- FIXED FLEXBOX STYLE: ANCHORS THE PLUS SIGN INSIDE THE CHAT INPUT FOR REAL ---
 st.markdown(
     """
     <style>
@@ -12,63 +12,68 @@ st.markdown(
     .stMainBlockContainer {
         max-width: 800px !important;
         margin: 0 auto !important;
-        padding-bottom: 120px !important; /* Make room so messages don't hide behind the input bar */
+        padding-bottom: 140px !important;
     }
     
-    /* Find the container holding the chat input box and position it relatively */
+    /* Target the actual structural container that surrounds the rounded chat box */
     div[data-testid="stChatInput"] {
         max-width: 650px !important;
         margin: 0 auto !important;
         position: relative !important;
+        display: flex !important;
+        align-items: center !important;
     }
     
     /* Push the typing text inside the chat box over to the right to leave space for the + sign */
     div[data-testid="stChatInput"] textarea {
-        padding-left: 50px !important; 
+        padding-left: 55px !important; 
     }
     
-    /* Target our custom plus button and force it down inside the left edge of the input box */
+    /* Target our custom plus container and insert it neatly inline on top of the text area */
     .chat-plus-container {
-        position: fixed;
-        bottom: 52px; /* Moves it exactly down to line up with the typing bar */
-        left: calc(50% - 310px); /* Centers it and aligns it to the left edge of the 650px chat box */
-        z-index: 999999; /* Forces it to sit on top of everything else */
+        position: absolute !important;
+        left: 14px !important;
+        /* Center it vertically exactly inside the bar */
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        z-index: 999999 !important;
+        display: block !important;
     }
     
     .chat-plus-btn {
-        background: #f0f2f6;
-        border: none;
-        font-size: 22px;
-        color: #555;
-        cursor: pointer;
-        font-weight: bold;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%; /* Makes the plus button a neat little circle */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: background 0.2s ease, transform 0.2s ease;
+        background: #e4e6eb !important;
+        border: none !important;
+        font-size: 20px !important;
+        color: #333 !important;
+        cursor: pointer !important;
+        font-weight: bold !important;
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
+        pointer-events: auto !important; /* Forces the browser to allow clicks */
     }
     
     .chat-plus-btn:hover {
-        background: #e4e6eb;
+        background: #d8dadf !important;
         transform: scale(1.05);
-        color: #000;
+        color: #000 !important;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Render the plus button inside its fixed container wrapper
+# Render the plus button inside its self-centering flex wrapper
 st.markdown(
     '<div class="chat-plus-container"><button class="chat-plus-btn" onclick="alert(\'Photo and file attachment options opened!\')">+</button></div>', 
     unsafe_allow_html=True
 )
-# -----------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 
 st.title("Welcome to StrikeAI!")
 st.write("This standalone AI chatbot is running completely in the cloud.")
@@ -92,7 +97,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# 4. Handle Input & AI Generation (Using native clean input bar!)
+# 4. Handle Input & AI Generation
 if user_input := st.chat_input("Ask StrikeAI a question..."):
     with st.chat_message("user"):
         st.markdown(user_input)
