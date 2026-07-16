@@ -1,5 +1,5 @@
 import streamlit as st
-from huggingface_hub import InferenceClient
+from groq import Groq
 
 # 1. Title your public webpage
 st.set_page_config(page_title="My Custom AI", page_icon="🤖")
@@ -7,14 +7,14 @@ st.title("Welcome to StrikeAI!")
 st.write("This standalone AI chatbot is running completely in the cloud.")
 
 # 2. Grab the hidden API key from host settings
-if "HF_TOKEN" in st.secrets:
-    api_key = st.secrets["HF_TOKEN"]
+if "GROQ_API_KEY" in st.secrets:
+    api_key = st.secrets["GROQ_API_KEY"]
 else:
-    st.error("Please configure your HF_TOKEN in the Streamlit secrets panel.")
+    st.error("Please configure your GROQ_API_KEY in the Streamlit secrets panel.")
     st.stop()
 
-# Initialize the Hugging Face client using a free, fully open Google Gemini model
-client = InferenceClient(provider="hf-inference", api_key=api_key)
+# Initialize the Groq client
+client = Groq(api_key=api_key)
 
 # 3. Handle Chat History
 if "messages" not in st.session_state:
@@ -32,16 +32,14 @@ if user_input := st.chat_input("Ask me anything..."):
     
     # Send conversation history to the cloud model
     with st.chat_message("assistant"):
-        # This gives StrikeAI its unique identity and personality!
-        hf_messages = [{"role": "system", "content": "You are StrikeAI, a funny and slightly sarcastic gaming expert. Use casual slang."}]
-        
+        # This gives StrikeAI its unique gaming identity and personality!
+        groq_messages = [{"role": "system", "content": "You are StrikeAI, a funny and slightly sarcastic gaming expert. Use casual slang."}]
         for m in st.session_state.messages:
-            hf_messages.append({"role": m["role"], "content": m["content"]})
+            groq_messages.append({"role": m["role"], "content": m["content"]})
             
         completion = client.chat.completions.create(
-            model="google/gemma-2-27b-it", # Free, stable, highly conversational model
-            messages=hf_messages,
-            max_tokens=500
+            model="llama-3.3-70b-versatile", # Incredibly powerful, ultra-fast free model
+            messages=groq_messages
         )
         response_text = completion.choices.message.content
         st.markdown(response_text)
