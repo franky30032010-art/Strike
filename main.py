@@ -2,27 +2,68 @@ import streamlit as st
 from groq import Groq
 
 # 1. Title your public webpage
-st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="My Custom AI", page_icon="🤖")
+st.title("Welcome to StrikeAI!")
+st.write("This standalone AI chatbot is running completely in the cloud.")
 
-# Custom CSS to handle centering and formatting
+# --- NEW: ADVANCED INTEGRATED PLUS BUTTON STYLING ---
+# This code injects a functional plus button directly into the native chat input bar!
 st.markdown(
     """
     <style>
+    /* Make room for the message space centering */
     .stMainBlockContainer {
         max-width: 800px !important;
         margin: 0 auto !important;
     }
-    /* Hide default upload labels to keep the inline layout tight */
-    div[data-testid="stFileUploader"] label {
-        display: none;
+    /* Restyle the main chat input bar wrapper to fit our plus button */
+    div[data-testid="stChatInput"] {
+        max-width: 600px !important;
+        margin: 0 auto !important;
+        position: relative !important;
+    }
+    div[data-testid="stChatInput"] textarea {
+        padding-left: 45px !important; /* Push placeholder text to the right for the + sign */
+    }
+    /* Style our custom overlay plus button */
+    .chat-plus-btn {
+        position: absolute;
+        left: 15px;
+        bottom: 12px;
+        z-index: 1000;
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #555;
+        cursor: pointer;
+        font-weight: 300;
+        line-height: 1;
+        transition: transform 0.2s ease;
+    }
+    .chat-plus-btn:hover {
+        transform: scale(1.15);
+        color: #000;
     }
     </style>
+    
+    <script>
+    // Simple script to handle clicking our custom inline plus button
+    function triggerHiddenUpload() {
+        const uploader = window.parent.document.querySelector('input[type="file"]');
+        if (uploader) {
+            uploader.click();
+        } else {
+            alert("Open the sidebar on the left to manage files!");
+        }
+    }
+    </script>
     """,
     unsafe_allow_html=True
 )
 
-st.title("Welcome to StrikeAI!")
-st.write("This standalone AI chatbot is running completely in the cloud.")
+# Render the interactive inline plus sign anchor visually
+st.markdown('<button class="chat-plus-btn" onclick="triggerHiddenUpload()">+</button>', unsafe_allow_html=True)
+# -----------------------------------------------------
 
 # 2. Grab the hidden API key from host settings
 if "GROQ_API_KEY" in st.secrets:
@@ -43,31 +84,18 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- INLINE TYPING BAR LAYOUT WITH UPLOADER ---
-# Create a form at the bottom so pressing enter submits both the file and the text
-with st.form(key="chat_form", clear_on_submit=True):
-    # Split the area into three columns: a wide text bar, an upload slot, and a submit button
-    col1, col2, col3 = st.columns([6, 2, 1], vertical_alignment="bottom")
-    
-    with col1:
-        user_text = st.text_input("Message...", placeholder="Ask StrikeAI a question...", label_visibility="collapsed")
-        
-    with col2:
-        uploaded_file = st.file_uploader("Upload", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
-        
-    with col3:
-        submit_button = st.form_submit_button("Send")
+# --- KEEPING AN OPTIONAL SIDEBAR FOR VISUAL ATTACHMENTS ---
+with st.sidebar:
+    st.header("Attachments")
+    uploaded_file = st.file_uploader("Upload a screenshot (PNG, JPG)", type=["png", "jpg", "jpeg"])
+    if uploaded_file is not None:
+        st.image(uploaded_file, caption="Uploaded Screenshot", use_container_width=True)
 
-# Display the uploaded file if present
-if uploaded_file is not None:
-    st.image(uploaded_file, caption="Attached Screenshot", width=300)
-
-# 4. Handle Input & AI Generation
-if submit_button and user_text:
-    # Show user message
+# 4. Handle Input & AI Generation (Using native clean input bar!)
+if user_input := st.chat_input("Ask StrikeAI a question..."):
     with st.chat_message("user"):
-        st.markdown(user_text)
-    st.session_state.messages.append({"role": "user", "content": user_text})
+        st.markdown(user_input)
+    st.session_state.messages.append({"role": "user", "content": user_input})
     
     # Send conversation history to the cloud model
     with st.chat_message("assistant"):
@@ -94,4 +122,3 @@ if submit_button and user_text:
         st.markdown(response_text)
         
     st.session_state.messages.append({"role": "assistant", "content": response_text})
-    st.rerun()
