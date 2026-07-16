@@ -13,7 +13,7 @@ else:
     st.error("Please configure your HF_TOKEN in the Streamlit secrets panel.")
     st.stop()
 
-# Initialize the Hugging Face client using a free Meta Llama model
+# Initialize the Hugging Face client using a free, fully open Google Gemini model
 client = InferenceClient(provider="hf-inference", api_key=api_key)
 
 # 3. Handle Chat History
@@ -39,7 +39,7 @@ if user_input := st.chat_input("Ask me anything..."):
             hf_messages.append({"role": m["role"], "content": m["content"]})
             
         completion = client.chat.completions.create(
-        model="Qwen/Qwen2.5-Coder-32B-Instruct", 
+            model="google/gemma-2-27b-it", # Free, stable, highly conversational model
             messages=hf_messages,
             max_tokens=500
         )
