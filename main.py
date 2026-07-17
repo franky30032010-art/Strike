@@ -99,6 +99,18 @@ st.markdown(
 st.title("Welcome to StrikeAI!")
 st.write("This standalone AI chatbot is running completely in the cloud.")
 
+# Initialize Session triggers safely
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "show_uploader" not in st.session_state:
+    st.session_state.show_uploader = False
+
+# Add a clean sidebar button to wipe broken chat history cache loops
+with st.sidebar:
+    if st.button("Wipe Chat Memory 🔄"):
+        st.session_state.messages = []
+        st.rerun()
+
 if "GROQ_API_KEY" in st.secrets:
     api_key = st.secrets["GROQ_API_KEY"]
 else:
@@ -106,11 +118,6 @@ else:
     st.stop()
 
 client = Groq(api_key=api_key)
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "show_uploader" not in st.session_state:
-    st.session_state.show_uploader = False
 
 chat_container = st.container()
 with chat_container:
@@ -162,14 +169,26 @@ def render_chat_input():
         for m in st.session_state.messages:
             groq_messages.append({"role": m["role"], "content": m["content"]})
             
-        # FIX: We forced max_tokens=4096 here to give it plenty of room to write huge files!
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=groq_messages,
-            max_tokens=4096
-        )
+        try:
+            completion = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=groq_messages,
+                max_tokens=4096
+            )
+            
+            # Robust extraction with multiple fallback checks to safeguard against API changes
+            if hasattr(completion, 'choices') and len(completion.choices) > 0:
+                choice = completion.choices[0]
+                if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+                    response_text = choice.message.content
+                else:
+                    response_text = "Error: Couldn't read choice message details."
+            else:
+                response_text = "Error: API response choices array returned empty."
+                
+        except Exception as e:
+            response_text = f"Groq Connection Error: {str(e)}"
         
-        response_text = completion.choices[0].message.content
         st.session_state.messages.append({"role": "assistant", "content": response_text})
         st.session_state.show_uploader = False
         st.rerun()
