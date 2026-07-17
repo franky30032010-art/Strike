@@ -105,7 +105,7 @@ if "messages" not in st.session_state:
 if "show_uploader" not in st.session_state:
     st.session_state.show_uploader = False
 
-# Add a clean sidebar button to wipe broken chat history cache loops
+# Sidebar button to wipe cache
 with st.sidebar:
     if st.button("Wipe Chat Memory 🔄"):
         st.session_state.messages = []
@@ -166,17 +166,19 @@ def render_chat_input():
         )
         
         groq_messages = [{"role": "system", "content": persona}]
-        for m in st.session_state.messages:
+        
+        # FIX: Only send the last 4 messages to Groq to prevent blowing past the 12,000 TPM limit
+        recent_history = st.session_state.messages[-4:]
+        for m in recent_history:
             groq_messages.append({"role": m["role"], "content": m["content"]})
             
         try:
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=groq_messages,
-                max_tokens=4096
+                max_tokens=2048 # Balanced token buffer
             )
             
-            # Robust extraction with multiple fallback checks to safeguard against API changes
             if hasattr(completion, 'choices') and len(completion.choices) > 0:
                 choice = completion.choices[0]
                 if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
