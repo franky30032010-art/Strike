@@ -135,49 +135,50 @@ client = Groq(api_key=api_key)
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+# Container to render the messages into before the fragment runs
+chat_container = st.container()
 
-# --- HORIZONTAL INTEGRATED DESIGN INPUT BAR ---
-st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
+with chat_container:
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-with st.form(key="chat_layout_form", clear_on_submit=True):
-    
-    # Grid columns aligning layout parts seamlessly
-    col_plus, col_text, col_btn = st.columns([0.08, 0.78, 0.14], vertical_alignment="center")
-    
-    with col_plus:
-        st.markdown('<div class="plus-action-wrapper">', unsafe_allow_html=True)
-        st.markdown('<button type="button" class="clean-plus-btn" onclick="clickActualUploader()">+</button>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+# --- OPTIMISED FRAGMENT ZONE FOR THE CHAT INPUT BAR ---
+@st.fragment
+def render_chat_input():
+    st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
+
+    with st.form(key="chat_layout_form", clear_on_submit=True):
+        col_plus, col_text, col_btn = st.columns([0.08, 0.78, 0.14], vertical_alignment="center")
         
-    with col_text:
-        user_text = st.text_input("Message", placeholder="Ask StrikeAI a question...", label_visibility="collapsed")
-        
-    with col_btn:
-        submit_button = st.form_submit_button("Send")
+        with col_plus:
+            st.markdown('<div class="plus-action-wrapper">', unsafe_allow_html=True)
+            st.markdown('<button type="button" class="clean-plus-btn" onclick="clickActualUploader()">+</button>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        with col_text:
+            user_text = st.text_input("Message", placeholder="Ask StrikeAI a question...", label_visibility="collapsed")
+            
+        with col_btn:
+            submit_button = st.form_submit_button("Send")
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Functional uploader rendering silently inside the backend thread
-with st.sidebar:
-    st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("HiddenFile", type=["png", "jpg", "jpeg"])
     st.markdown('</div>', unsafe_allow_html=True)
 
-# If an asset file is selected, visually prompt a confirmation badge into the feed
-if uploaded_file is not None:
-    st.info(f"📎 File attached: {uploaded_file.name}")
-# -------------------------------------------------------------
+    # Functional uploader rendering silently inside the sidebar background thread
+    with st.sidebar:
+        st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("HiddenFile", type=["png", "jpg", "jpeg"])
+        st.markdown('</div>', unsafe_allow_html=True)
 
-# 4. Handle Input & AI Generation
-if submit_button and user_text:
-    with st.chat_message("user"):
-        st.markdown(user_text)
-    st.session_state.messages.append({"role": "user", "content": user_text})
-    
-    with st.chat_message("assistant"):
+    # If an asset file is selected, visually prompt a confirmation badge
+    if uploaded_file is not None:
+        st.info(f"📎 File attached: {uploaded_file.name}")
+
+    # 4. Handle Input & AI Generation instantly inside the fragment
+    if submit_button and user_text:
+        # Append the new message to state
+        st.session_state.messages.append({"role": "user", "content": user_text})
+        
         persona = (
             "You are StrikeAI, a highly authentic, chill, and slightly witty gaming buddy "
             "created by Franky. Talk like a real teenager or streamer on Discord or Twitch. "
@@ -197,7 +198,10 @@ if submit_button and user_text:
             messages=groq_messages
         )
         response_text = completion.choices.message.content
-        st.markdown(response_text)
+        st.session_state.messages.append({"role": "assistant", "content": response_text})
         
-    st.session_state.messages.append({"role": "assistant", "content": response_text})
-    st.rerun()
+        # Trigger a master rerun so the parent container redraws the newly updated messages cleanly
+        st.rerun()
+
+# Run our fragment function
+render_chat_input()
