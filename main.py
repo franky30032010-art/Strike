@@ -4,14 +4,14 @@ from groq import Groq
 # 1. Title your public webpage and force wide mode
 st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# Custom CSS to design a unified layout bar at the bottom of the screen
+# Custom CSS to design a stacked layout at the bottom of the screen
 st.markdown(
     """
     <style>
     .stMainBlockContainer {
         max-width: 800px !important;
         margin: 0 auto !important;
-        padding-bottom: 160px !important; 
+        padding-bottom: 220px !important; 
     }
     
     /* COMPLETELY HIDE THE BULKY DEFAULT STREAMLIT UPLOADER WIDGET */
@@ -19,26 +19,34 @@ st.markdown(
         display: none !important;
     }
     
-    /* STYLE OUR BRAND NEW CLEAN CUSTOM PLUS BUTTON */
+    /* CENTERED TOP ROW FOR THE ATTACHMENT PLUS BUTTON */
+    .attachment-row {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+    
+    /* STYLE OUR SIMPLE, LARGE PLUS BUTTON */
     .clean-plus-btn {
         background: transparent !important;
         border: none !important;
-        font-size: 28px !important;
+        font-size: 36px !important; /* Made larger */
         font-weight: 300 !important;
-        color: #555 !important;
+        color: #65676b !important;
         cursor: pointer !important;
-        width: 36px !important;
-        height: 36px !important;
+        width: 50px !important;
+        height: 50px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         transition: transform 0.2s ease, color 0.2s ease;
         padding: 0 !important;
-        margin-right: 5px !important;
     }
     .clean-plus-btn:hover {
-        transform: scale(1.15);
-        color: #000 !important;
+        transform: scale(1.2);
+        color: #007bff !important;
     }
     
     /* Make the text entry field look sharp and remove margins */
@@ -59,12 +67,13 @@ st.markdown(
         border: none !important;
         padding: 8px 20px !important;
         font-weight: bold !important;
+        width: 100% !important;
     }
     div[data-testid="stFormSubmitButton"] button:hover {
         background-color: #0056b3 !important;
     }
     
-    /* Sticky footer bar container that pins everything to the bottom on ONE line */
+    /* Sticky footer bar container that pins everything to the bottom */
     .sticky-footer-bar {
         position: fixed !important;
         bottom: 30px !important;
@@ -74,15 +83,15 @@ st.markdown(
         width: 100% !important;
         background-color: white !important;
         z-index: 99999 !important;
-        padding: 10px 20px !important;
-        border-radius: 30px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        padding: 15px 20px !important;
+        border-radius: 25px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
         border: 1px solid #e4e6eb !important;
     }
     </style>
     
     <script>
-    // JavaScript helper script that safely tells your browser to trigger the file manager when clicking our +
+    // JavaScript helper script that triggers the file manager when clicking our +
     function clickActualUploader() {
         const fileInput = window.parent.document.querySelector('div.hidden-uploader input[type="file"]');
         if (fileInput) {
@@ -116,26 +125,28 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- COMBINED SINGLE-ROW INPUT CONTAINER WITH CLEAN BUTTON ---
+# --- STACKED STICKY FOOTER INTERFACE ---
 st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
 
 with st.form(key="chat_layout_form", clear_on_submit=True):
-    # Fixed the missing width array here so columns align perfectly!
-    row_col1, row_col2, row_col3 = st.columns([0.1, 0.8, 0.1], vertical_alignment="center")
     
-    with row_col1:
-        # Render a clean, unshaded HTML plus sign button that executes our JavaScript link on click
-        st.markdown('<button type="button" class="clean-plus-btn" onclick="clickActualUploader()">+</button>', unsafe_allow_html=True)
-        
-        # Keep the functional uploader running silently hidden in the background frame
-        st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("Hidden", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-    with row_col2:
+    # ROW 1: Large + Upload Symbol sitting on top
+    st.markdown('<div class="attachment-row">', unsafe_allow_html=True)
+    st.markdown('<button type="button" class="clean-plus-btn" onclick="clickActualUploader()">+</button>', unsafe_allow_html=True)
+    
+    # Functional uploader running silently in the background
+    st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("Hidden", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # ROW 2: Input box and send button underneath
+    input_col, button_col = st.columns([0.85, 0.15], vertical_alignment="center")
+    
+    with input_col:
         user_text = st.text_input("Message", placeholder="Ask StrikeAI a question...", label_visibility="collapsed")
         
-    with row_col3:
+    with button_col:
         submit_button = st.form_submit_button("Send")
 
 st.markdown('</div>', unsafe_allow_html=True)
