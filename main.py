@@ -1,99 +1,115 @@
 import streamlit as st
 from groq import Groq
 
-# 1. Title your public webpage and force wide mode
+# 1. Page Configuration & Setup
 st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# Custom CSS to design a stacked layout at the bottom of the screen
+# Custom CSS to construct a clean, modern input bar
 st.markdown(
     """
     <style>
     .stMainBlockContainer {
         max-width: 800px !important;
         margin: 0 auto !important;
-        padding-bottom: 220px !important; 
+        padding-bottom: 140px !important; 
     }
     
-    /* COMPLETELY HIDE THE BULKY DEFAULT STREAMLIT UPLOADER WIDGET */
-    .hidden-uploader {
+    /* ABSOLUTELY HIDE SKELETON CORES OF THE DEFAULT UPLOADER BOXES */
+    .hidden-uploader, div[data-testid="stFileUploader"] {
         display: none !important;
+        position: absolute !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        opacity: 0 !important;
     }
     
-    /* CENTERED TOP ROW FOR THE ATTACHMENT PLUS BUTTON */
-    .attachment-row {
+    /* LARGE + ACTION BUTTON DESIGN */
+    .plus-action-wrapper {
         display: flex !important;
-        justify-content: center !important;
         align-items: center !important;
-        width: 100% !important;
-        margin-bottom: 8px !important;
+        justify-content: center !important;
+        height: 100% !important;
     }
     
-    /* STYLE OUR SIMPLE, LARGE PLUS BUTTON */
     .clean-plus-btn {
         background: transparent !important;
         border: none !important;
-        font-size: 36px !important; /* Made larger */
-        font-weight: 300 !important;
+        font-size: 38px !important; 
+        font-weight: 200 !important;
         color: #65676b !important;
         cursor: pointer !important;
-        width: 50px !important;
-        height: 50px !important;
+        width: 44px !important;
+        height: 44px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        margin-top: -6px !important; /* Raises symbol slightly above text baseline */
         transition: transform 0.2s ease, color 0.2s ease;
         padding: 0 !important;
     }
     .clean-plus-btn:hover {
-        transform: scale(1.2);
+        transform: scale(1.15) rotate(90deg);
         color: #007bff !important;
     }
     
-    /* Make the text entry field look sharp and remove margins */
+    /* Sleek Text Input Box styling */
     div[data-testid="stTextInput"] {
         margin: 0 !important;
     }
     div[data-testid="stTextInput"] input {
-        border-radius: 20px !important;
-        padding: 10px 20px !important;
-        border: 1px solid #d8dadf !important;
+        border-radius: 24px !important;
+        padding: 12px 20px !important;
+        border: 1px solid #e4e6eb !important;
+        background-color: #f0f2f5 !important;
+    }
+    div[data-testid="stTextInput"] input:focus {
+        background-color: #ffffff !important;
+        border-color: #007bff !important;
     }
     
-    /* Style the main send button */
+    /* Minimalist Pill Send Button */
     div[data-testid="stFormSubmitButton"] button {
         border-radius: 20px !important;
         background-color: #007bff !important;
         color: white !important;
         border: none !important;
-        padding: 8px 20px !important;
-        font-weight: bold !important;
+        padding: 8px 22px !important;
+        font-weight: 600 !important;
         width: 100% !important;
     }
     div[data-testid="stFormSubmitButton"] button:hover {
         background-color: #0056b3 !important;
+        color: white !important;
     }
     
-    /* Sticky footer bar container that pins everything to the bottom */
+    /* Floating Sticky Footer Bar */
     .sticky-footer-bar {
         position: fixed !important;
-        bottom: 30px !important;
+        bottom: 25px !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
-        max-width: 700px !important;
-        width: 100% !important;
+        max-width: 760px !important;
+        width: 92% !important;
         background-color: white !important;
         z-index: 99999 !important;
-        padding: 15px 20px !important;
-        border-radius: 25px !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+        padding: 10px 16px !important;
+        border-radius: 32px !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06) !important;
         border: 1px solid #e4e6eb !important;
+    }
+    
+    /* Remove default streamlit form borders */
+    div[data-testid="stForm"] {
+        border: none !important;
+        padding: 0 !important;
     }
     </style>
     
     <script>
-    // JavaScript helper script that triggers the file manager when clicking our +
+    // Safe DOM target selector to trigger the hidden system explorer window
     function clickActualUploader() {
-        const fileInput = window.parent.document.querySelector('div.hidden-uploader input[type="file"]');
+        const fileInput = window.parent.document.querySelector('input[type="file"]');
         if (fileInput) {
             fileInput.click();
         }
@@ -106,54 +122,53 @@ st.markdown(
 st.title("Welcome to StrikeAI!")
 st.write("This standalone AI chatbot is running completely in the cloud.")
 
-# 2. Grab the hidden API key from host settings
+# 2. API Key verification
 if "GROQ_API_KEY" in st.secrets:
     api_key = st.secrets["GROQ_API_KEY"]
 else:
     st.error("Please configure your GROQ_API_KEY in the Streamlit secrets panel.")
     st.stop()
 
-# Initialize the Groq client
 client = Groq(api_key=api_key)
 
 # 3. Handle Chat History
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display previous chat messages
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- STACKED STICKY FOOTER INTERFACE ---
+# --- HORIZONTAL INTEGRATED DESIGN INPUT BAR ---
 st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
 
 with st.form(key="chat_layout_form", clear_on_submit=True):
     
-    # ROW 1: Large + Upload Symbol sitting on top
-    st.markdown('<div class="attachment-row">', unsafe_allow_html=True)
-    st.markdown('<button type="button" class="clean-plus-btn" onclick="clickActualUploader()">+</button>', unsafe_allow_html=True)
+    # Grid columns aligning layout parts seamlessly
+    col_plus, col_text, col_btn = st.columns([0.08, 0.78, 0.14], vertical_alignment="center")
     
-    # Functional uploader running silently in the background
-    st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Hidden", type=["png", "jpg", "jpeg"], label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # ROW 2: Input box and send button underneath
-    input_col, button_col = st.columns([0.85, 0.15], vertical_alignment="center")
-    
-    with input_col:
+    with col_plus:
+        st.markdown('<div class="plus-action-wrapper">', unsafe_allow_html=True)
+        st.markdown('<button type="button" class="clean-plus-btn" onclick="clickActualUploader()">+</button>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+    with col_text:
         user_text = st.text_input("Message", placeholder="Ask StrikeAI a question...", label_visibility="collapsed")
         
-    with button_col:
+    with col_btn:
         submit_button = st.form_submit_button("Send")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# If an asset file is uploaded, show its preview box inside the conversation zone
+# Functional uploader rendering silently inside the backend thread
+with st.sidebar:
+    st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("HiddenFile", type=["png", "jpg", "jpeg"])
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# If an asset file is selected, visually prompt a confirmation badge into the feed
 if uploaded_file is not None:
-    st.image(uploaded_file, caption="Attached File Preview", width=200)
+    st.info(f"📎 File attached: {uploaded_file.name}")
 # -------------------------------------------------------------
 
 # 4. Handle Input & AI Generation
