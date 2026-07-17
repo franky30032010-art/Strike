@@ -4,7 +4,7 @@ from groq import Groq
 # 1. Page Configuration & Setup
 st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# Custom CSS to construct a clean, modern input bar
+# Custom CSS to construct a clean, modern input bar and native button wrapper
 st.markdown(
     """
     <style>
@@ -24,7 +24,7 @@ st.markdown(
         opacity: 0 !important;
     }
     
-    /* LARGE + ACTION BUTTON DESIGN */
+    /* LARGE + ACTION BUTTON DESIGN USING NATIVE HTML LABEL ELEMENT */
     .plus-action-wrapper {
         display: flex !important;
         align-items: center !important;
@@ -47,6 +47,7 @@ st.markdown(
         margin-top: -6px !important; /* Raises symbol slightly above text baseline */
         transition: transform 0.2s ease, color 0.2s ease;
         padding: 0 !important;
+        user-select: none;
     }
     .clean-plus-btn:hover {
         transform: scale(1.15) rotate(90deg);
@@ -105,16 +106,6 @@ st.markdown(
         padding: 0 !important;
     }
     </style>
-    
-    <script>
-    // Safe DOM target selector to trigger the hidden system explorer window
-    function clickActualUploader() {
-        const fileInput = window.parent.document.querySelector('input[type="file"]');
-        if (fileInput) {
-            fileInput.click();
-        }
-    }
-    </script>
     """,
     unsafe_allow_html=True
 )
@@ -135,7 +126,7 @@ client = Groq(api_key=api_key)
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Container to render the messages into before the fragment runs
+# Container to render the messages into cleanly
 chat_container = st.container()
 
 with chat_container:
@@ -143,7 +134,7 @@ with chat_container:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-# --- OPTIMISED FRAGMENT ZONE FOR THE CHAT INPUT BAR ---
+# --- OPTIMIZED FRAGMENT ZONE FOR THE CHAT INPUT BAR ---
 @st.fragment
 def render_chat_input():
     st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
@@ -153,7 +144,8 @@ def render_chat_input():
         
         with col_plus:
             st.markdown('<div class="plus-action-wrapper">', unsafe_allow_html=True)
-            st.markdown('<button type="button" class="clean-plus-btn" onclick="clickActualUploader()">+</button>', unsafe_allow_html=True)
+            # Uses a native HTML label pointed directly to our standard file upload element ID
+            st.markdown('<label for="native-strike-uploader" class="clean-plus-btn">+</label>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
         with col_text:
@@ -164,11 +156,10 @@ def render_chat_input():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Functional uploader rendering silently inside the sidebar background thread
-    with st.sidebar:
-        st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("HiddenFile", type=["png", "jpg", "jpeg"])
-        st.markdown('</div>', unsafe_allow_html=True)
+    # Functional upload widget configured to listen natively without JavaScript
+    st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
+    uploaded_file = st.file_uploader("HiddenFile", type=["png", "jpg", "jpeg"], key="native-strike-uploader")
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # If an asset file is selected, visually prompt a confirmation badge
     if uploaded_file is not None:
@@ -176,7 +167,6 @@ def render_chat_input():
 
     # 4. Handle Input & AI Generation instantly inside the fragment
     if submit_button and user_text:
-        # Append the new message to state
         st.session_state.messages.append({"role": "user", "content": user_text})
         
         persona = (
@@ -200,8 +190,8 @@ def render_chat_input():
         response_text = completion.choices.message.content
         st.session_state.messages.append({"role": "assistant", "content": response_text})
         
-        # Trigger a master rerun so the parent container redraws the newly updated messages cleanly
+        # Fresh master rerun to append content into view layout smoothly
         st.rerun()
 
-# Run our fragment function
+# Run our stable fragment function
 render_chat_input()
