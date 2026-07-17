@@ -116,11 +116,12 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# --- NEW: COMBINED SINGLE-ROW INPUT CONTAINER WITH CLEAN BUTTON ---
+# --- COMBINED SINGLE-ROW INPUT CONTAINER WITH CLEAN BUTTON ---
 st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
 
 with st.form(key="chat_layout_form", clear_on_submit=True):
-    row_col1, row_col2, row_col3 = st.columns(, vertical_alignment="center")
+    # Fixed the missing width array here so columns align perfectly!
+    row_col1, row_col2, row_col3 = st.columns([0.1, 0.8, 0.1], vertical_alignment="center")
     
     with row_col1:
         # Render a clean, unshaded HTML plus sign button that executes our JavaScript link on click
