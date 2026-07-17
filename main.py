@@ -4,7 +4,6 @@ from groq import Groq
 # 1. Page Configuration & Layout Rules
 st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# Inject Custom CSS styles directly to layout objects
 st.markdown(
     """
     <style>
@@ -40,7 +39,7 @@ st.markdown(
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        margin-top: -6px !important; /* Raises plus slightly above entry input field */
+        margin-top: -6px !important; 
         transition: transform 0.2s ease, color 0.2s ease !important;
     }
     
@@ -48,10 +47,6 @@ st.markdown(
         transform: scale(1.15) rotate(90deg) !important;
         color: #007bff !important;
         background-color: transparent !important;
-    }
-    div[data-testid="stColumn"]:first-child button:active {
-        background-color: transparent !important;
-        color: #0056b3 !important;
     }
 
     /* Sleek Rounded Chat Entry Box */
@@ -64,10 +59,6 @@ st.markdown(
         border: 1px solid #e4e6eb !important;
         background-color: #f0f2f5 !important;
     }
-    div[data-testid="stTextInput"] input:focus {
-        background-color: #ffffff !important;
-        border-color: #007bff !important;
-    }
     
     /* Minimalist Pill Send Button */
     div[data-testid="stFormSubmitButton"] button {
@@ -78,10 +69,6 @@ st.markdown(
         padding: 8px 22px !important;
         font-weight: 600 !important;
         width: 100% !important;
-    }
-    div[data-testid="stFormSubmitButton"] button:hover {
-        background-color: #0056b3 !important;
-        color: white !important;
     }
     
     /* Floating Sticky Layout Footer Box */
@@ -100,7 +87,6 @@ st.markdown(
         border: 1px solid #e4e6eb !important;
     }
     
-    /* Wipe container boundary borders */
     div[data-testid="stForm"] {
         border: none !important;
         padding: 0 !important;
@@ -113,7 +99,6 @@ st.markdown(
 st.title("Welcome to StrikeAI!")
 st.write("This standalone AI chatbot is running completely in the cloud.")
 
-# 2. Host Secrets Validation
 if "GROQ_API_KEY" in st.secrets:
     api_key = st.secrets["GROQ_API_KEY"]
 else:
@@ -122,20 +107,17 @@ else:
 
 client = Groq(api_key=api_key)
 
-# Initialize Session Triggers
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "show_uploader" not in st.session_state:
     st.session_state.show_uploader = False
 
-# Render conversational interface feed elements
 chat_container = st.container()
 with chat_container:
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-# --- OPTIMIZED RE-RENDER FRAGMENT CONTAINER BLOCK ---
 @st.fragment
 def render_chat_input():
     st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
@@ -144,7 +126,6 @@ def render_chat_input():
         col_plus, col_text, col_btn = st.columns([0.08, 0.78, 0.14], vertical_alignment="center")
         
         with col_plus:
-            # Native Streamlit component acting as the click target trigger
             plus_clicked = st.form_submit_button("+")
             if plus_clicked:
                 st.session_state.show_uploader = not st.session_state.show_uploader
@@ -158,16 +139,12 @@ def render_chat_input():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Natively mount or unmount the file widget right on top of the box
     if st.session_state.show_uploader:
         st.markdown("<br><br>", unsafe_allow_html=True)
         uploaded_file = st.file_uploader("Upload assets directly to chat", type=["png", "jpg", "jpeg", "txt", "pdf"])
-        if uploaded_file is not None:
-            st.success(f"📎 File tracking verification: {uploaded_file.name}")
     else:
         uploaded_file = None
 
-    # 4. Handle Text Submission & Execution loops
     if submit_button and user_text:
         st.session_state.messages.append({"role": "user", "content": user_text})
         
@@ -185,18 +162,16 @@ def render_chat_input():
         for m in st.session_state.messages:
             groq_messages.append({"role": m["role"], "content": m["content"]})
             
+        # FIX: We forced max_tokens=4096 here to give it plenty of room to write huge files!
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=groq_messages
+            messages=groq_messages,
+            max_tokens=4096
         )
         
-        # FIXED: Corrected the completion target dictionary mapping to index choices[0] safely
         response_text = completion.choices[0].message.content
         st.session_state.messages.append({"role": "assistant", "content": response_text})
-        
-        # Reset the uploader state visibility on text submission
         st.session_state.show_uploader = False
         st.rerun()
 
-# Execute the Input Function block
 render_chat_input()
