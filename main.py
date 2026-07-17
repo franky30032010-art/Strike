@@ -189,7 +189,9 @@ def render_chat_input():
             model="llama-3.3-70b-versatile",
             messages=groq_messages
         )
-        response_text = completion.choices.message.content
+        
+        # FIXED: Corrected the completion target dictionary mapping to index choices[0] safely
+        response_text = completion.choices[0].message.content
         st.session_state.messages.append({"role": "assistant", "content": response_text})
         
         # Reset the uploader state visibility on text submission
