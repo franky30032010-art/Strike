@@ -1,10 +1,10 @@
 import streamlit as st
 from groq import Groq
 
-# 1. Page Configuration & Setup
+# 1. Page Configuration & Layout Rules
 st.set_page_config(page_title="My Custom AI", page_icon="🤖", layout="wide")
 
-# Custom CSS to construct a clean, modern input bar and native button wrapper
+# Inject Custom CSS styles directly to layout objects
 st.markdown(
     """
     <style>
@@ -14,7 +14,7 @@ st.markdown(
         padding-bottom: 140px !important; 
     }
     
-    /* ABSOLUTELY HIDE SKELETON CORES OF THE DEFAULT UPLOADER BOXES */
+    /* ABSOLUTELY HIDE DEFAULT SKELETON BLOCKS OF THE ORIGINAL UPLOADER BAR */
     .hidden-uploader, div[data-testid="stFileUploader"] {
         display: none !important;
         position: absolute !important;
@@ -24,37 +24,37 @@ st.markdown(
         opacity: 0 !important;
     }
     
-    /* LARGE + ACTION BUTTON DESIGN USING NATIVE HTML LABEL ELEMENT */
-    .plus-action-wrapper {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        height: 100% !important;
-    }
-    
-    .clean-plus-btn {
-        background: transparent !important;
-        border: none !important;
-        font-size: 38px !important; 
-        font-weight: 200 !important;
+    /* STYLE NATIVE STREAMLIT BUTTON TO RENDER AS A CLEAN LARGE + ICON */
+    div[data-testid="stColumn"]:first-child button {
+        background-color: transparent !important;
         color: #65676b !important;
-        cursor: pointer !important;
+        border: none !important;
+        font-size: 38px !important;
+        font-weight: 200 !important;
+        padding: 0 !important;
+        margin: 0 !important;
         width: 44px !important;
         height: 44px !important;
+        line-height: 44px !important;
+        box-shadow: none !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        margin-top: -6px !important; /* Raises symbol slightly above text baseline */
-        transition: transform 0.2s ease, color 0.2s ease;
-        padding: 0 !important;
-        user-select: none;
-    }
-    .clean-plus-btn:hover {
-        transform: scale(1.15) rotate(90deg);
-        color: #007bff !important;
+        margin-top: -6px !important; /* Raises plus slightly above entry input field */
+        transition: transform 0.2s ease, color 0.2s ease !important;
     }
     
-    /* Sleek Text Input Box styling */
+    div[data-testid="stColumn"]:first-child button:hover {
+        transform: scale(1.15) rotate(90deg) !important;
+        color: #007bff !important;
+        background-color: transparent !important;
+    }
+    div[data-testid="stColumn"]:first-child button:active {
+        background-color: transparent !important;
+        color: #0056b3 !important;
+    }
+
+    /* Sleek Rounded Chat Entry Box */
     div[data-testid="stTextInput"] {
         margin: 0 !important;
     }
@@ -84,7 +84,7 @@ st.markdown(
         color: white !important;
     }
     
-    /* Floating Sticky Footer Bar */
+    /* Floating Sticky Layout Footer Box */
     .sticky-footer-bar {
         position: fixed !important;
         bottom: 25px !important;
@@ -100,7 +100,7 @@ st.markdown(
         border: 1px solid #e4e6eb !important;
     }
     
-    /* Remove default streamlit form borders */
+    /* Wipe container boundary borders */
     div[data-testid="stForm"] {
         border: none !important;
         padding: 0 !important;
@@ -113,7 +113,7 @@ st.markdown(
 st.title("Welcome to StrikeAI!")
 st.write("This standalone AI chatbot is running completely in the cloud.")
 
-# 2. API Key verification
+# 2. Host Secrets Validation
 if "GROQ_API_KEY" in st.secrets:
     api_key = st.secrets["GROQ_API_KEY"]
 else:
@@ -122,19 +122,20 @@ else:
 
 client = Groq(api_key=api_key)
 
-# 3. Handle Chat History
+# Initialize Session Triggers
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "show_uploader" not in st.session_state:
+    st.session_state.show_uploader = False
 
-# Container to render the messages into cleanly
+# Render conversational interface feed elements
 chat_container = st.container()
-
 with chat_container:
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-# --- OPTIMIZED FRAGMENT ZONE FOR THE CHAT INPUT BAR ---
+# --- OPTIMIZED RE-RENDER FRAGMENT CONTAINER BLOCK ---
 @st.fragment
 def render_chat_input():
     st.markdown('<div class="sticky-footer-bar">', unsafe_allow_html=True)
@@ -143,11 +144,12 @@ def render_chat_input():
         col_plus, col_text, col_btn = st.columns([0.08, 0.78, 0.14], vertical_alignment="center")
         
         with col_plus:
-            st.markdown('<div class="plus-action-wrapper">', unsafe_allow_html=True)
-            # Uses a native HTML label pointed directly to our standard file upload element ID
-            st.markdown('<label for="native-strike-uploader" class="clean-plus-btn">+</label>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
+            # Native Streamlit component acting as the click target trigger
+            plus_clicked = st.form_submit_button("+")
+            if plus_clicked:
+                st.session_state.show_uploader = not st.session_state.show_uploader
+                st.rerun()
+                
         with col_text:
             user_text = st.text_input("Message", placeholder="Ask StrikeAI a question...", label_visibility="collapsed")
             
@@ -156,16 +158,16 @@ def render_chat_input():
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Functional upload widget configured to listen natively without JavaScript
-    st.markdown('<div class="hidden-uploader">', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("HiddenFile", type=["png", "jpg", "jpeg"], key="native-strike-uploader")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Natively mount or unmount the file widget right on top of the box
+    if st.session_state.show_uploader:
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("Upload assets directly to chat", type=["png", "jpg", "jpeg", "txt", "pdf"])
+        if uploaded_file is not None:
+            st.success(f"📎 File tracking verification: {uploaded_file.name}")
+    else:
+        uploaded_file = None
 
-    # If an asset file is selected, visually prompt a confirmation badge
-    if uploaded_file is not None:
-        st.info(f"📎 File attached: {uploaded_file.name}")
-
-    # 4. Handle Input & AI Generation instantly inside the fragment
+    # 4. Handle Text Submission & Execution loops
     if submit_button and user_text:
         st.session_state.messages.append({"role": "user", "content": user_text})
         
@@ -190,8 +192,9 @@ def render_chat_input():
         response_text = completion.choices.message.content
         st.session_state.messages.append({"role": "assistant", "content": response_text})
         
-        # Fresh master rerun to append content into view layout smoothly
+        # Reset the uploader state visibility on text submission
+        st.session_state.show_uploader = False
         st.rerun()
 
-# Run our stable fragment function
+# Execute the Input Function block
 render_chat_input()
